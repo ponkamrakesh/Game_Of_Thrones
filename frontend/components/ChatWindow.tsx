@@ -9,36 +9,58 @@ export default function ChatWindow() {
   const [loading, setLoading] = useState(false);
 
   const send = async () => {
-    if (!input) return;
+    if (!input.trim()) return;
 
-    setMessages(prev => [...prev, { role: "user", content: input }]);
+    const userMsg = { role: "user", content: input };
+    setMessages(prev => [...prev, userMsg]);
+
     setLoading(true);
 
-    const answer = await askQuestion(input);
+    try {
+      const answer = await askQuestion(input);
 
-    setMessages(prev => [...prev, { role: "bot", content: answer }]);
+      const botMsg = { role: "bot", content: answer };
+      setMessages(prev => [...prev, botMsg]);
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        { role: "bot", content: "⚠️ The ravens failed to return..." }
+      ]);
+    }
+
     setInput("");
     setLoading(false);
   };
 
   return (
-    <div className="p-4">
-      <div className="h-[400px] overflow-y-auto border p-2">
+    <div className="p-4 max-w-2xl mx-auto">
+      
+      {/* Chat Box */}
+      <div className="h-[400px] overflow-y-auto border border-gray-700 p-4 rounded bg-black">
         {messages.map((m, i) => (
-          <div key={i}>
-            <b>{m.role}:</b> {m.content}
+          <div key={i} className="mb-2">
+            <b>{m.role === "user" ? "You" : "Maester"}:</b> {m.content}
           </div>
         ))}
         {loading && <div>🔥 Consulting the realm...</div>}
       </div>
 
-      <div className="flex mt-2">
+      {/* Input */}
+      <div className="flex mt-3 gap-2">
         <input
-          className="flex-1 p-2 bg-gray-800"
+          className="flex-1 p-2 bg-gray-800 text-white border border-gray-600 rounded outline-none"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask the realm..."
+          onKeyDown={(e) => {
+            if (e.key === "Enter") send();
+          }}
         />
-        <button onClick={send} className="bg-red-700 px-4">
+
+        <button
+          onClick={send}
+          className="bg-red-700 px-4 rounded hover:bg-red-800"
+        >
           Send
         </button>
       </div>
